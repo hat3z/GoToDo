@@ -35,8 +35,7 @@ public class GTD_ViewerEditor : Editor
 
     public override void OnInspectorGUI()
     {
-
-        //serializedObject.Update();
+        serializedObject.Update();
         GUI.backgroundColor = green;
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         GUI.backgroundColor = original;
@@ -76,49 +75,6 @@ public class GTD_ViewerEditor : Editor
         EditorGUILayout.EndToggleGroup();
         EditorGUILayout.EndVertical();
 
-        /*
-       #region LISTING
-        GUI.backgroundColor = green;
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        GUI.backgroundColor = original;
-        showItems = EditorGUILayout.BeginToggleGroup("Show Items List:", showItems);
-        if(showItems)
-        {
-
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Items", EditorStyles.boldLabel);
-
-            for (int i = 0; i < GTDViewerList.arraySize; i++)
-            {
-                GUILayout.BeginVertical(EditorStyles.helpBox);
-
-                SerializedProperty item = GTDViewerList.GetArrayElementAtIndex(i);
-                EditorGUILayout.PropertyField(item, true);
-
-                GUI.backgroundColor = red;
-                if (GUILayout.Button("Delete"))
-                {
-                    ShowDialogEntry(i);
-                }
-                GUI.backgroundColor = original;
-                GUILayout.EndVertical();
-                EditorGUILayout.Space();
-
-            }
-
-            GUI.backgroundColor = green;
-            if (GUILayout.Button("Add new Item to Database"))
-            {
-                Viewer.AddNewTodoEntry();
-            }
-            GUI.backgroundColor = original;
-
-            EditorGUILayout.Separator();
-            EditorGUILayout.EndVertical();
-        }
-
-        #endregion
-        */
         serializedObject.ApplyModifiedProperties();
     }
 
@@ -128,7 +84,8 @@ public class GTD_ViewerEditor : Editor
         if (option)
         {
             Viewer.Entries.RemoveAt(_itemIndex);
-            EditorUtility.SetDirty(Viewer);
+            GUIUtility.ExitGUI();
+            //EditorUtility.SetDirty(Viewer);
         }
     }
 }
