@@ -17,6 +17,15 @@ public class GTD_Viewer : MonoBehaviour
         Entries.Add(_entryToAdd);
     }
 
+    public bool hasTODOEntries()
+    {
+        if(Entries.Count != 0)
+        {
+            return true;
+        }
+        return false;
+    }
+
 }
 
 [Serializable]

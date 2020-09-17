@@ -19,8 +19,10 @@ public class GTD_ViewerEditor : Editor
 
     // New Entry panel
     bool isPanelOpened = false;
-    GTD_TodoEntry newEntry = new GTD_TodoEntry();
+
     bool setDescription = false;
+    string entryName;
+    string entryDesc;
 
     // Colors
     Color original = new Color();
@@ -40,51 +42,61 @@ public class GTD_ViewerEditor : Editor
         red = Color.red;
         original = GUI.color;
 
+        EditorGUILayout.Separator();
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         showItems = EditorGUILayout.BeginToggleGroup("Show GoToDo's:", showItems);
         EditorGUILayout.Space();
         if (showItems)
         {
             EditorGUI.indentLevel = 0;
-
-            for (int i = 0; i <Viewer.Entries.Count; i++)
+            if(Viewer.hasTODOEntries())
             {
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
-                if(entriesOpened[i])
+                for (int i = 0; i < Viewer.Entries.Count; i++)
                 {
-      
-
-                    EditorGUILayout.BeginVertical();
-                    EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
-                    EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, CenteredLabel_TODOName());
-                    EditorGUILayout.EndVertical();
-                    EditorGUILayout.Separator();
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.BeginVertical();
-                    EditorGUILayout.PrefixLabel("Created date:", EditorStyles.miniBoldLabel);
-                    EditorGUILayout.LabelField(Viewer.Entries[i].createdTime);
-                    EditorGUILayout.EndVertical();
-                    EditorGUILayout.Separator();
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Modify"))
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
+                    if (entriesOpened[i])
                     {
-                        Debug.Log("modifyEvent");
-                    }
-                    GUI.backgroundColor = red;
-                    if (GUILayout.Button("Delete"))
-                    {
-                        ShowDialogEntry(i);
-                    }
-                    GUI.backgroundColor = original;
-                    EditorGUILayout.EndHorizontal();
 
-       
+
+                        EditorGUILayout.BeginVertical();
+                        EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
+                        EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, CenteredLabel_TODOName());
+                        EditorGUILayout.EndVertical();
+                        EditorGUILayout.Separator();
+                        EditorGUILayout.Space();
+
+                        EditorGUILayout.BeginHorizontal();
+                        Rect leftRect = new Rect(0 , 0, EditorGUIUtility.fieldWidth, 30);
+                        EditorGUILayout.LabelField("Created date:", LeftLabel_CreatedDateLabel());
+                        EditorGUILayout.LabelField(Viewer.Entries[i].createdTime, LeftLabel_CreatedDateLabel());
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.Separator();
+                        EditorGUILayout.Space();
+
+                        EditorGUILayout.BeginHorizontal();
+                        if (GUILayout.Button("Modify"))
+                        {
+                            Debug.Log("modifyEvent");
+                        }
+                        GUI.backgroundColor = red;
+                        if (GUILayout.Button("Delete"))
+                        {
+                            ShowDialogEntry(i);
+                        }
+                        GUI.backgroundColor = original;
+                        EditorGUILayout.EndHorizontal();
+
+
+                    }
+                    EditorGUILayout.EndToggleGroup();
+                    EditorGUILayout.EndVertical();
                 }
-                EditorGUILayout.EndToggleGroup();
+            }
+            else
+            {
+                EditorGUILayout.BeginVertical();
+                EditorGUILayout.LabelField("No TODOs yet :(", CenteredLabel_TODOTitle());
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.Separator();
@@ -100,7 +112,8 @@ public class GTD_ViewerEditor : Editor
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel("New TODO title:", EditorStyles.boldLabel);
-            newEntry.EntryName = EditorGUILayout.TextField(newEntry.EntryName);
+            entryName = EditorGUILayout.TextField("",entryName);
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Separator();
             GUILayout.FlexibleSpace();
@@ -111,18 +124,25 @@ public class GTD_ViewerEditor : Editor
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginVertical();
                 EditorGUILayout.PrefixLabel("New TODO description:", EditorStyles.boldLabel);
-                newEntry.EntryDesc = EditorGUILayout.TextArea(newEntry.EntryDesc, GUILayout.Width(EditorGUIUtility.currentViewWidth-30), GUILayout.Height(100));
+                entryDesc = EditorGUILayout.TextArea(entryDesc, GUILayout.Width(EditorGUIUtility.currentViewWidth-45), GUILayout.Height(100));
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.EndToggleGroup();
 
 
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Add"))
+            if(entryName != "")
             {
-                AddTODOEntry(newEntry);
-                isPanelOpened = false;
+                if (GUILayout.Button("Add"))
+                {
+                    Debug.Log(entryName);
+                    AddTODOEntry(entryName, entryDesc);
+                    entryName = string.Empty;
+                    isPanelOpened = false;
+                    Debug.Log(entryName);
+                }
             }
+
             if (GUILayout.Button("Cancel"))
             {
                 isPanelOpened = false;
@@ -147,11 +167,20 @@ public class GTD_ViewerEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    void AddTODOEntry(GTD_TodoEntry _entryData)
+    void AddTODOEntry(string _entryName, string _entryDesc)
     {
-        if(_entryData.EntryName != string.Empty)
+        GTD_TodoEntry newEntry = new GTD_TodoEntry();
+
+        if(_entryName != "")
         {
-            Viewer.AddNewTodoEntry(_entryData);
+            newEntry.EntryName = _entryName;
+            newEntry.EntryDesc = _entryDesc;
+            Debug.Log("Created: "+ newEntry.EntryName);
+            Viewer.AddNewTodoEntry(newEntry);
+        }
+        else
+        {
+            Debug.Log("EntryName=null");
         }
     }
 
@@ -190,9 +219,19 @@ public class GTD_ViewerEditor : Editor
     {
         GUIStyle result = new GUIStyle();
         result.alignment = TextAnchor.MiddleCenter;
-        result.fontSize = 14;
+        result.fontSize = 13;
         result.normal.textColor = Color.white;
         return result;
     }
+
+    GUIStyle LeftLabel_CreatedDateLabel()
+    {
+        GUIStyle result = new GUIStyle();
+        result.alignment = TextAnchor.LowerLeft;
+        result.fontSize = 9;
+        result.normal.textColor = Color.black;
+        return result;
+    }
+
     #endregion
 }
