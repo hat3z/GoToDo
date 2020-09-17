@@ -54,14 +54,35 @@ public class GTD_ViewerEditor : Editor
                 for (int i = 0; i < Viewer.Entries.Count; i++)
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                    entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
+                    EditorGUILayout.BeginHorizontal();
+                    //entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
+                    entriesOpened[i] = GUILayout.Toggle(entriesOpened[i],GetTODOEntryLabel(i));
+                    //EditorGUILayout.LabelField("Status:", EntryStatusLabel());
+                    GUI.backgroundColor = red;
+                    if (GUILayout.Button("X", GUILayout.Width(20), GUILayout.Height(20)))
+                    {
+                        ShowDialogEntry(i);
+                    }
+                    GUI.backgroundColor = original;
+
+                    EditorGUILayout.EndHorizontal();
                     if (entriesOpened[i])
                     {
-
-
                         EditorGUILayout.BeginVertical();
                         EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
                         EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, CenteredLabel_TODOName());
+                        EditorGUILayout.EndVertical();
+                        EditorGUILayout.Separator();
+                        EditorGUILayout.Space();
+
+                        EditorGUILayout.BeginVertical();
+                        EditorGUILayout.LabelField("TODO Description:", CenteredLabel_TODOTitle());
+
+                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                        scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Width(EditorGUIUtility.currentViewWidth-70), GUILayout.Height(100));
+                        GUILayout.Label(Viewer.Entries[i].EntryDesc, EntryDesc_Viewer(), GUILayout.ExpandHeight(true));
+                        EditorGUILayout.EndScrollView();
+                        EditorGUILayout.EndVertical();
                         EditorGUILayout.EndVertical();
                         EditorGUILayout.Separator();
                         EditorGUILayout.Space();
@@ -74,22 +95,29 @@ public class GTD_ViewerEditor : Editor
                         EditorGUILayout.Separator();
                         EditorGUILayout.Space();
 
+                        if(Viewer.Entries[i].isCompleted)
+                        {
+
+                            EditorGUILayout.BeginHorizontal();
+                            Rect leftRect2 = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
+                            EditorGUILayout.LabelField("Completed date:", LeftLabel_CreatedDateLabel());
+                            EditorGUILayout.LabelField(Viewer.Entries[i].createdTime, LeftLabel_CreatedDateLabel());
+                            EditorGUILayout.EndHorizontal();
+                            EditorGUILayout.Separator();
+                            EditorGUILayout.Space();
+                        }
+
                         EditorGUILayout.BeginHorizontal();
-                        if (GUILayout.Button("Modify"))
+                        if (GUILayout.Button("Set To Completed"))
                         {
                             Debug.Log("modifyEvent");
+                            Viewer.SetEntryToCompleted(i);
                         }
-                        GUI.backgroundColor = red;
-                        if (GUILayout.Button("Delete"))
-                        {
-                            ShowDialogEntry(i);
-                        }
-                        GUI.backgroundColor = original;
                         EditorGUILayout.EndHorizontal();
 
 
                     }
-                    EditorGUILayout.EndToggleGroup();
+                    //EditorGUILayout.EndToggleGroup();
                     EditorGUILayout.EndVertical();
                 }
             }
@@ -138,6 +166,7 @@ public class GTD_ViewerEditor : Editor
                     Debug.Log(entryName);
                     AddTODOEntry(entryName, entryDesc);
                     entryName = string.Empty;
+                    entryDesc = string.Empty;
                     isPanelOpened = false;
                     Debug.Log(entryName);
                 }
@@ -201,7 +230,16 @@ public class GTD_ViewerEditor : Editor
     string GetTODOEntryLabel(int _index)
     {
         int num = _index + 1;
-        string result = "TODO - " + num;
+        string result;
+        if(Viewer.GetEntryByIndex(_index).isCompleted)
+        {
+            result = "TODO - " + num + " (Completed)";
+        }
+        else
+        {
+            result = "TODO - " + num + " (Not Completed)";
+        }
+
         return result;
     }
 
@@ -232,6 +270,23 @@ public class GTD_ViewerEditor : Editor
         result.normal.textColor = Color.black;
         return result;
     }
+
+    GUIStyle EntryDesc_Viewer()
+    {
+        GUIStyle result = new GUIStyle();
+        result.fontSize = 12;
+        result.normal.textColor = Color.black;
+        result.wordWrap = true;
+        return result;
+    }
+    GUIStyle EntryStatusLabel()
+    {
+        GUIStyle result = new GUIStyle();
+        result.alignment = TextAnchor.LowerRight;
+        result.normal.textColor = Color.black;
+        return result;
+    }
+
 
     #endregion
 }

@@ -17,6 +17,18 @@ public class GTD_Viewer : MonoBehaviour
         Entries.Add(_entryToAdd);
     }
 
+    public GTD_TodoEntry GetEntryByIndex(int _index)
+    {
+        for (int i = 0; i < Entries.Count; i++)
+        {
+            if (i == _index)
+            {
+                return Entries[i];
+            }
+        }
+        return null;
+    }
+
     public bool hasTODOEntries()
     {
         if(Entries.Count != 0)
@@ -26,12 +38,23 @@ public class GTD_Viewer : MonoBehaviour
         return false;
     }
 
+    public void SetEntryToCompleted(int _index)
+    {
+        for (int i = 0; i < Entries.Count; i++)
+        {
+            if(i == _index)
+            {
+                Entries[i].isCompleted = true;
+                Entries[i].completedTime = DateTime.Now.ToShortDateString();
+            }
+        }
+    }
+
 }
 
 [Serializable]
 public class GTD_TodoEntry
 {
-    protected int gameObjectHash;
     public string EntryName;
     public string EntryDesc;
     public string createdTime;
