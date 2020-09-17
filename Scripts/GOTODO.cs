@@ -6,10 +6,13 @@ using System;
 /// author@htz
 /// </summary>
 
-public class GTD_Viewer : MonoBehaviour
+
+public class GOTODO : MonoBehaviour
 {
 
     public List<GTD_TodoEntry> Entries = new List<GTD_TodoEntry>();
+
+
 
     public void AddNewTodoEntry(GTD_TodoEntry _entryToAdd)
     {

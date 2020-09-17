@@ -5,7 +5,7 @@ using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-[CustomEditor(typeof(GTD_Viewer))]
+[CustomEditor(typeof(GOTODO))]
 /// <summary>
 /// author@htz
 /// </summary>
@@ -13,7 +13,7 @@ using UnityEditor;
 public class GTD_ViewerEditor : Editor
 {
     Vector2 scrollPos;
-    private GTD_Viewer Viewer;
+    private GOTODO Viewer;
     bool showItems = false;
     List<bool> entriesOpened = new List<bool>();
 
@@ -28,11 +28,14 @@ public class GTD_ViewerEditor : Editor
     Color original = new Color();
     Color green = new Color();
     Color red = new Color();
+    //Buttons
+    public Color customGreen = new Color(0.4f, 0.79f, 0.18f);
+    public Color customRed = new Color(0.8f, 0.12f, 0.07f);
 
     public override void OnInspectorGUI()
     {
         // Startup
-        Viewer = target as GTD_Viewer;
+        Viewer = target as GOTODO;
         for (int i = 0; i < Viewer.Entries.Count; i++)
         {
             entriesOpened.Add(false);
@@ -56,21 +59,22 @@ public class GTD_ViewerEditor : Editor
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     EditorGUILayout.BeginHorizontal();
                     //entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
-                    entriesOpened[i] = GUILayout.Toggle(entriesOpened[i],GetTODOEntryLabel(i));
-                    //EditorGUILayout.LabelField("Status:", EntryStatusLabel());
-                    GUI.backgroundColor = red;
-                    if (GUILayout.Button("X", GUILayout.Width(20), GUILayout.Height(20)))
+                    entriesOpened[i] = GUILayout.Toggle(entriesOpened[i], GetTODOEntryLabel(i));
+
+                    GUI.backgroundColor = customRed;
+                    if (GUILayout.Button("X", DeleteEntryButton(), GUILayout.MaxWidth(20), GUILayout.MaxHeight(20)))
                     {
                         ShowDialogEntry(i);
                     }
                     GUI.backgroundColor = original;
 
                     EditorGUILayout.EndHorizontal();
+
                     if (entriesOpened[i])
                     {
                         EditorGUILayout.BeginVertical();
                         EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
-                        EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, CenteredLabel_TODOName());
+                        EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, EntryName_Viewer());
                         EditorGUILayout.EndVertical();
                         EditorGUILayout.Separator();
                         EditorGUILayout.Space();
@@ -108,23 +112,29 @@ public class GTD_ViewerEditor : Editor
                         }
 
                         EditorGUILayout.BeginHorizontal();
-                        if (GUILayout.Button("Set To Completed"))
+                        if(!Viewer.Entries[i].isCompleted)
                         {
-                            Debug.Log("modifyEvent");
-                            Viewer.SetEntryToCompleted(i);
+                            if (GUILayout.Button("Set To Completed"))
+                            {
+                                Debug.Log("modifyEvent");
+                                Viewer.SetEntryToCompleted(i);
+                            }
                         }
+
                         EditorGUILayout.EndHorizontal();
 
 
                     }
                     //EditorGUILayout.EndToggleGroup();
                     EditorGUILayout.EndVertical();
+                    EditorGUILayout.Space();
                 }
+
             }
             else
             {
                 EditorGUILayout.BeginVertical();
-                EditorGUILayout.LabelField("No TODOs yet :(", CenteredLabel_TODOTitle());
+                EditorGUILayout.LabelField("No TODOs yet :(", NoTODOSLabel());
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.Separator();
@@ -138,21 +148,21 @@ public class GTD_ViewerEditor : Editor
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel("New TODO title:", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.LabelField("New TODO title:", EditorStyles.boldLabel);
             entryName = EditorGUILayout.TextField("",entryName);
 
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
             EditorGUILayout.Separator();
             GUILayout.FlexibleSpace();
 
-            setDescription = EditorGUILayout.BeginToggleGroup("Use Description", setDescription);
+            setDescription = EditorGUILayout.BeginToggleGroup("Add Description", setDescription);
             if (setDescription)
             {
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginVertical();
                 EditorGUILayout.PrefixLabel("New TODO description:", EditorStyles.boldLabel);
-                entryDesc = EditorGUILayout.TextArea(entryDesc, GUILayout.Width(EditorGUIUtility.currentViewWidth-45), GUILayout.Height(100));
+                entryDesc = EditorGUILayout.TextArea(entryDesc, GUILayout.MaxWidth(600), GUILayout.Height(100));
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.EndToggleGroup();
@@ -180,17 +190,22 @@ public class GTD_ViewerEditor : Editor
 
             EditorGUILayout.EndVertical();
         }
-        GUI.backgroundColor = green;
+        GUI.backgroundColor = customGreen;
 
         if(!isPanelOpened)
         {
-            if (GUILayout.Button("Add new TODO"))
+            if (GUILayout.Button("Add new TODO", AddTODOButton(), GUILayout.MaxHeight(35)))
             {
                 isPanelOpened = true;
             }
         }
 
         GUI.backgroundColor = original;
+
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField("GOTODO 1.0", FooterLabel_Left());
+        EditorGUILayout.LabelField("htzprdcts", FooterLabel_Right(), GUILayout.MaxWidth(40));
+        EditorGUILayout.EndHorizontal();
 
         serializedObject.Update();
         serializedObject.ApplyModifiedProperties();
@@ -215,7 +230,7 @@ public class GTD_ViewerEditor : Editor
 
     public void ShowDialogEntry(int _itemIndex)
     {
-        bool option = EditorUtility.DisplayDialog("Are you sure?", "This will delete the selected item from FoodItems", "Ok", "Cancel");
+        bool option = EditorUtility.DisplayDialog("Are you sure?", "This will delete this TODO Entry.", "Ok", "Cancel");
         if (option)
         {
             Viewer.Entries.RemoveAt(_itemIndex);
@@ -244,21 +259,22 @@ public class GTD_ViewerEditor : Editor
     }
 
     #region --- GUI STYLES ---
+
+    GUIStyle NoTODOSLabel()
+    {
+        GUIStyle result = new GUIStyle();
+        result.alignment = TextAnchor.MiddleCenter;
+        result.fontStyle = FontStyle.Italic;
+        result.normal.textColor = customRed;
+        return result;
+    }
+
     GUIStyle CenteredLabel_TODOTitle()
     {
         GUIStyle result = new GUIStyle();
         result.alignment = TextAnchor.MiddleCenter;
         result.fontStyle = FontStyle.Bold;
-        result.normal.textColor = Color.white;
-        return result;
-    }
-
-    GUIStyle CenteredLabel_TODOName()
-    {
-        GUIStyle result = new GUIStyle();
-        result.alignment = TextAnchor.MiddleCenter;
-        result.fontSize = 13;
-        result.normal.textColor = Color.white;
+        result.normal.textColor = Color.black;
         return result;
     }
 
@@ -279,14 +295,74 @@ public class GTD_ViewerEditor : Editor
         result.wordWrap = true;
         return result;
     }
-    GUIStyle EntryStatusLabel()
+
+    GUIStyle EntryName_Viewer()
     {
         GUIStyle result = new GUIStyle();
-        result.alignment = TextAnchor.LowerRight;
-        result.normal.textColor = Color.black;
+        result.fontSize = 12;
+        result.alignment = TextAnchor.MiddleCenter;
+        result.normal.textColor = Color.white;
+        result.wordWrap = true;
         return result;
     }
 
+    GUIStyle EntryStatusLabel_NotCompleted()
+    {
+        GUIStyle result = new GUIStyle();
+        result.alignment = TextAnchor.LowerLeft;
+        result.normal.textColor = Color.yellow;
+        return result;
+    }
+
+    GUIStyle EntryStatusLabel_Completed()
+    {
+        GUIStyle result = new GUIStyle();
+        result.fontSize = 9;
+        result.alignment = TextAnchor.LowerLeft;
+        result.normal.textColor = Color.green;
+        return result;
+    }
+
+    GUIStyle FooterLabel_Left()
+    {
+        GUIStyle result = new GUIStyle();
+        result.fontSize = 8;
+        result.alignment = TextAnchor.LowerLeft;
+        result.normal.textColor = Color.grey;
+        return result;
+    }
+
+    GUIStyle FooterLabel_Right()
+    {
+        GUIStyle result = new GUIStyle();
+        
+        result.fontSize = 8;
+        result.alignment = TextAnchor.LowerLeft;
+        result.normal.textColor = Color.grey;
+        return result;
+    }
+
+    GUIStyle DeleteEntryButton()
+    {
+        GUIStyle result = new GUIStyle(GUI.skin.button);
+        result.fontSize = 10;
+        result.hover.textColor = Color.white;
+        result.alignment = TextAnchor.MiddleCenter;
+        result.padding.left = 7;
+        result.padding.top = 3;
+        result.normal.textColor = Color.white;
+        return result;
+    }
+
+    GUIStyle AddTODOButton()
+    {
+        GUIStyle result = new GUIStyle(GUI.skin.button);
+        result.fontSize = 12;
+        result.hover.textColor = Color.white;
+        result.alignment = TextAnchor.MiddleCenter;
+        result.normal.textColor = Color.white;
+        return result;
+    }
 
     #endregion
 }
