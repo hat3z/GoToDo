@@ -21,8 +21,8 @@ public class GTD_ViewerEditor : Editor
     bool isPanelOpened = false;
 
     bool setDescription = false;
-    string entryName;
-    string entryDesc;
+    string entryName = "";
+    string entryDesc = "";
 
     // Colors
     Color original = new Color();
