@@ -26,11 +26,12 @@ public class GTD_ViewerEditor : Editor
 
     // Colors
     Color original = new Color();
-    Color green = new Color();
-    Color red = new Color();
+
+
     //Buttons
-    public Color customGreen = new Color(0.4f, 0.79f, 0.18f);
-    public Color customRed = new Color(0.8f, 0.12f, 0.07f);
+    Color customGreen = new Color(0.4f, 0.79f, 0.18f);
+    Color customRed = new Color(0.8f, 0.12f, 0.07f);
+    Color darkBackground = new Color(0.25f, 0.24f, 0.24f);
 
     public override void OnInspectorGUI()
     {
@@ -41,8 +42,6 @@ public class GTD_ViewerEditor : Editor
             entriesOpened.Add(false);
         }
 
-        green = Color.green;
-        red = Color.red;
         original = GUI.color;
 
         EditorGUILayout.Separator();
@@ -60,6 +59,16 @@ public class GTD_ViewerEditor : Editor
                     EditorGUILayout.BeginHorizontal();
                     //entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
                     entriesOpened[i] = GUILayout.Toggle(entriesOpened[i], GetTODOEntryLabel(i));
+                    GUI.backgroundColor = original;
+                    if (Viewer.Entries[i].isCompleted)
+                    {
+                        EditorGUILayout.LabelField("Completed", EntryStatusLabel_Completed(), GUILayout.MaxWidth(100));
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField("Not Completed", EntryStatusLabel_NotCompleted(), GUILayout.MaxWidth(100));
+                    }
+
 
                     GUI.backgroundColor = customRed;
                     if (GUILayout.Button("X", DeleteEntryButton(), GUILayout.MaxWidth(20), GUILayout.MaxHeight(20)))
@@ -134,7 +143,7 @@ public class GTD_ViewerEditor : Editor
             else
             {
                 EditorGUILayout.BeginVertical();
-                EditorGUILayout.LabelField("No TODOs yet :(", NoTODOSLabel());
+                EditorGUILayout.LabelField("No TODOs yet :( \n\n Click on 'Add New TODO' button. ", NoTODOSLabel());
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.Separator();
@@ -246,14 +255,7 @@ public class GTD_ViewerEditor : Editor
     {
         int num = _index + 1;
         string result;
-        if(Viewer.GetEntryByIndex(_index).isCompleted)
-        {
-            result = "TODO - " + num + " (Completed)";
-        }
-        else
-        {
-            result = "TODO - " + num + " (Not Completed)";
-        }
+        result = "TODO - " + num;
 
         return result;
     }
@@ -266,6 +268,7 @@ public class GTD_ViewerEditor : Editor
         result.alignment = TextAnchor.MiddleCenter;
         result.fontStyle = FontStyle.Italic;
         result.normal.textColor = customRed;
+        result.wordWrap = true;
         return result;
     }
 
@@ -309,7 +312,8 @@ public class GTD_ViewerEditor : Editor
     GUIStyle EntryStatusLabel_NotCompleted()
     {
         GUIStyle result = new GUIStyle();
-        result.alignment = TextAnchor.LowerLeft;
+        result.fontSize = 10;
+        result.alignment = TextAnchor.MiddleCenter;
         result.normal.textColor = Color.yellow;
         return result;
     }
@@ -317,9 +321,10 @@ public class GTD_ViewerEditor : Editor
     GUIStyle EntryStatusLabel_Completed()
     {
         GUIStyle result = new GUIStyle();
-        result.fontSize = 9;
-        result.alignment = TextAnchor.LowerLeft;
-        result.normal.textColor = Color.green;
+        result.fontSize = 10;
+        result.alignment = TextAnchor.MiddleCenter;
+        result.normal.textColor = Color.white;
+        GUI.backgroundColor = Color.clear;
         return result;
     }
 
@@ -363,6 +368,17 @@ public class GTD_ViewerEditor : Editor
         result.normal.textColor = Color.white;
         return result;
     }
+
+    // To DARK Mode switching option
+    //GUIStyle ApplicationBackgroundBox()
+    //{
+    //    GUIStyle result = new GUIStyle();
+    //    result.fontSize = 12;
+    //    result.normal.textColor = Color.white;
+    //    result.alignment = TextAnchor.MiddleCenter;
+    //    GUI.backgroundColor = Color.grey;
+    //    return result;
+    //}
 
     #endregion
 }
