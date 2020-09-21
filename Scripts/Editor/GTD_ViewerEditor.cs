@@ -16,7 +16,9 @@ public class GTD_ViewerEditor : Editor
     private GOTODO Viewer;
     bool showItems = false;
     List<bool> entriesOpened = new List<bool>();
-
+    List<bool> entriesOpenedNotCompleted = new List<bool>();
+    List<bool> entriesOpenedCompleted = new List<bool>();
+    int selectedTabIndex;
     // New Entry panel
     bool isPanelOpened = false;
 
@@ -42,112 +44,283 @@ public class GTD_ViewerEditor : Editor
             entriesOpened.Add(false);
         }
 
+        for (int i = 0; i < Viewer.NotCompletedEntries.Count; i++)
+        {
+            entriesOpenedNotCompleted.Add(false);
+        }
+
+        for (int i = 0; i < Viewer.CompletedEntries.Count; i++)
+        {
+            entriesOpenedCompleted.Add(false);
+        }
+
         original = GUI.color;
 
         EditorGUILayout.Separator();
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         showItems = EditorGUILayout.BeginToggleGroup("Show GoToDo's:", showItems);
         EditorGUILayout.Space();
-        if (showItems)
+        selectedTabIndex = GUILayout.Toolbar(selectedTabIndex, new string[] {"Normal View","Organized View" });
+        EditorGUILayout.Space();
+        switch (selectedTabIndex)
         {
-            EditorGUI.indentLevel = 0;
-            if(Viewer.hasTODOEntries())
-            {
-                for (int i = 0; i < Viewer.Entries.Count; i++)
+            #region --- NORMAL VIEW ---
+            case 0:
+                if (showItems)
                 {
-                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                    EditorGUILayout.BeginHorizontal();
-                    //entriesOpened[i] = EditorGUILayout.BeginToggleGroup(GetTODOEntryLabel(i), entriesOpened[i]);
-                    entriesOpened[i] = GUILayout.Toggle(entriesOpened[i], GetTODOEntryLabel(i));
-                    GUI.backgroundColor = original;
-                    if (Viewer.Entries[i].isCompleted)
+                    EditorGUI.indentLevel = 0;
+                    EditorGUILayout.LabelField("Normal View", ViewModeLabel());
+                    EditorGUILayout.Space();
+                    if (Viewer.hasTODOEntries())
                     {
-                        EditorGUILayout.LabelField("Completed", EntryStatusLabel_Completed(), GUILayout.MaxWidth(100));
-                    }
-                    else
-                    {
-                        EditorGUILayout.LabelField("Not Completed", EntryStatusLabel_NotCompleted(), GUILayout.MaxWidth(100));
-                    }
-
-
-                    GUI.backgroundColor = customRed;
-                    if (GUILayout.Button("X", DeleteEntryButton(), GUILayout.MaxWidth(20), GUILayout.MaxHeight(20)))
-                    {
-                        ShowDialogEntry(i);
-                    }
-                    GUI.backgroundColor = original;
-
-                    EditorGUILayout.EndHorizontal();
-
-                    if (entriesOpened[i])
-                    {
-                        EditorGUILayout.BeginVertical();
-                        EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
-                        EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, EntryName_Viewer());
-                        EditorGUILayout.EndVertical();
-                        EditorGUILayout.Separator();
-                        EditorGUILayout.Space();
-
-                        EditorGUILayout.BeginVertical();
-                        EditorGUILayout.LabelField("TODO Description:", CenteredLabel_TODOTitle());
-
-                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                        scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Width(EditorGUIUtility.currentViewWidth-70), GUILayout.Height(100));
-                        GUILayout.Label(Viewer.Entries[i].EntryDesc, EntryDesc_Viewer(), GUILayout.ExpandHeight(true));
-                        EditorGUILayout.EndScrollView();
-                        EditorGUILayout.EndVertical();
-                        EditorGUILayout.EndVertical();
-                        EditorGUILayout.Separator();
-                        EditorGUILayout.Space();
-
-                        EditorGUILayout.BeginHorizontal();
-                        Rect leftRect = new Rect(0 , 0, EditorGUIUtility.fieldWidth, 30);
-                        EditorGUILayout.LabelField("Created date:", LeftLabel_CreatedDateLabel());
-                        EditorGUILayout.LabelField(Viewer.Entries[i].createdTime, LeftLabel_CreatedDateLabel());
-                        EditorGUILayout.EndHorizontal();
-                        EditorGUILayout.Separator();
-                        EditorGUILayout.Space();
-
-                        if(Viewer.Entries[i].isCompleted)
+                        for (int i = 0; i < Viewer.Entries.Count; i++)
                         {
-
+                            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                             EditorGUILayout.BeginHorizontal();
-                            Rect leftRect2 = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
-                            EditorGUILayout.LabelField("Completed date:", LeftLabel_CreatedDateLabel());
-                            EditorGUILayout.LabelField(Viewer.Entries[i].createdTime, LeftLabel_CreatedDateLabel());
+                            entriesOpened[i] = GUILayout.Toggle(entriesOpened[i], Viewer.Entries[i].EntryName, GUILayout.MaxWidth(270));
+                            GUI.backgroundColor = original;
+                            GUILayout.FlexibleSpace();
+                            if (Viewer.Entries[i].isCompleted)
+                            {
+                                EditorGUILayout.LabelField("Completed", EntryStatusLabel_Completed(), GUILayout.MaxWidth(100));
+                            }
+                            else
+                            {
+                                EditorGUILayout.LabelField("Not Completed", EntryStatusLabel_NotCompleted(), GUILayout.MaxWidth(100));
+                            }
+
+                            GUILayout.FlexibleSpace();
+                            GUI.backgroundColor = customRed;
+                            if (GUILayout.Button("X", DeleteEntryButton(), GUILayout.MaxWidth(20), GUILayout.MaxHeight(20)))
+                            {
+                                ShowDialogEntry(i);
+                            }
+                            GUI.backgroundColor = original;
+
                             EditorGUILayout.EndHorizontal();
-                            EditorGUILayout.Separator();
+
+                            if (entriesOpened[i])
+                            {
+                                EditorGUILayout.BeginVertical();
+                                EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
+                                EditorGUILayout.LabelField(Viewer.Entries[i].EntryName, EntryName_Viewer());
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                EditorGUILayout.BeginVertical();
+                                EditorGUILayout.LabelField("TODO Description:", CenteredLabel_TODOTitle());
+
+                                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                                scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Width(EditorGUIUtility.currentViewWidth - 70), GUILayout.Height(100));
+                                GUILayout.Label(Viewer.Entries[i].EntryDesc, EntryDesc_Viewer(), GUILayout.ExpandHeight(true));
+                                EditorGUILayout.EndScrollView();
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                EditorGUILayout.BeginHorizontal();
+                                Rect leftRect = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
+                                EditorGUILayout.LabelField("Created date:", LeftLabel_CreatedDateLabel());
+                                EditorGUILayout.LabelField(Viewer.Entries[i].createdTime, LeftLabel_CreatedDateLabel());
+                                EditorGUILayout.EndHorizontal();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                if (Viewer.Entries[i].isCompleted)
+                                {
+
+                                    EditorGUILayout.BeginHorizontal();
+                                    Rect leftRect2 = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
+                                    EditorGUILayout.LabelField("Completed date:", LeftLabel_CreatedDateLabel());
+                                    EditorGUILayout.LabelField(Viewer.Entries[i].createdTime, LeftLabel_CreatedDateLabel());
+                                    EditorGUILayout.EndHorizontal();
+                                    EditorGUILayout.Separator();
+                                    EditorGUILayout.Space();
+                                }
+
+                                EditorGUILayout.BeginHorizontal();
+                                if (!Viewer.Entries[i].isCompleted)
+                                {
+                                    if (GUILayout.Button("Set To Completed"))
+                                    {
+                                        Debug.Log("modifyEvent");
+                                        Viewer.SetEntryToCompleted(i);
+                                    }
+                                }
+
+                                EditorGUILayout.EndHorizontal();
+
+
+                            }
+                            EditorGUILayout.EndVertical();
                             EditorGUILayout.Space();
                         }
 
-                        EditorGUILayout.BeginHorizontal();
-                        if(!Viewer.Entries[i].isCompleted)
-                        {
-                            if (GUILayout.Button("Set To Completed"))
-                            {
-                                Debug.Log("modifyEvent");
-                                Viewer.SetEntryToCompleted(i);
-                            }
-                        }
-
-                        EditorGUILayout.EndHorizontal();
-
-
                     }
-                    //EditorGUILayout.EndToggleGroup();
-                    EditorGUILayout.EndVertical();
-                    EditorGUILayout.Space();
+                    else
+                    {
+                        EditorGUILayout.BeginVertical();
+                        EditorGUILayout.LabelField("No TODOs yet :( \n\n Click on 'Add New TODO' button. ", NoTODOSLabel());
+                        EditorGUILayout.EndVertical();
+                    }
+                    EditorGUILayout.Separator();
                 }
+                break;
+            #endregion
+            #region --- ORGANIZED VIEW ---
+            case 1:
+                if (showItems)
+                {
+                    EditorGUI.indentLevel = 0;
+                    EditorGUILayout.LabelField("Organized View", ViewModeLabel());
+                    EditorGUILayout.Space();
+                    if (Viewer.hasTODOEntries())
+                    {
+                        for (int i = 0; i < Viewer.NotCompletedEntries.Count; i++)
+                        {
+                            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                            EditorGUILayout.BeginHorizontal();
+                            entriesOpenedNotCompleted[i] = GUILayout.Toggle(entriesOpenedNotCompleted[i], Viewer.NotCompletedEntries[i].EntryName, GUILayout.MaxWidth(270));
+                            GUI.backgroundColor = original;
+                            GUILayout.FlexibleSpace();
+                            EditorGUILayout.LabelField("Not Completed", EntryStatusLabel_NotCompleted(), GUILayout.MaxWidth(100));
+                            GUILayout.FlexibleSpace();
+                            GUI.backgroundColor = customRed;
+                            if (GUILayout.Button("X", DeleteEntryButton(), GUILayout.MaxWidth(20), GUILayout.MaxHeight(20)))
+                            {
+                                ShowDialogEntry(i);
+                            }
+                            GUI.backgroundColor = original;
 
-            }
-            else
-            {
-                EditorGUILayout.BeginVertical();
-                EditorGUILayout.LabelField("No TODOs yet :( \n\n Click on 'Add New TODO' button. ", NoTODOSLabel());
-                EditorGUILayout.EndVertical();
-            }
-            EditorGUILayout.Separator();
+                            EditorGUILayout.EndHorizontal();
+
+                            if (entriesOpenedNotCompleted[i])
+                            {
+                                EditorGUILayout.BeginVertical();
+                                EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
+                                EditorGUILayout.LabelField(Viewer.NotCompletedEntries[i].EntryName, EntryName_Viewer());
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                EditorGUILayout.BeginVertical();
+                                EditorGUILayout.LabelField("TODO Description:", CenteredLabel_TODOTitle());
+
+                                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                                scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Width(EditorGUIUtility.currentViewWidth - 70), GUILayout.Height(100));
+                                GUILayout.Label(Viewer.NotCompletedEntries[i].EntryDesc, EntryDesc_Viewer(), GUILayout.ExpandHeight(true));
+                                EditorGUILayout.EndScrollView();
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                EditorGUILayout.BeginHorizontal();
+                                Rect leftRect = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
+                                EditorGUILayout.LabelField("Created date:", LeftLabel_CreatedDateLabel());
+                                EditorGUILayout.LabelField(Viewer.NotCompletedEntries[i].createdTime, LeftLabel_CreatedDateLabel());
+                                EditorGUILayout.EndHorizontal();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+                                EditorGUILayout.BeginHorizontal();
+                                if (!Viewer.Entries[i].isCompleted)
+                                {
+                                    if (GUILayout.Button("Set To Completed"))
+                                    {
+                                        Debug.Log("modifyEvent");
+                                        Viewer.SetEntryToCompleted(i);
+                                    }
+                                }
+
+                                EditorGUILayout.EndHorizontal();
+
+
+                            }
+                            EditorGUILayout.EndVertical();
+                            EditorGUILayout.Space();
+                        }
+                        for (int i = 0; i < Viewer.CompletedEntries.Count; i++)
+                        {
+                            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                            EditorGUILayout.BeginHorizontal();
+                            entriesOpenedCompleted[i] = GUILayout.Toggle(entriesOpenedCompleted[i], Viewer.CompletedEntries[i].EntryName, GUILayout.MaxWidth(270));
+                            GUI.backgroundColor = original;
+                            GUILayout.FlexibleSpace();
+                            EditorGUILayout.LabelField("Completed", EntryStatusLabel_Completed(), GUILayout.MaxWidth(100));
+                            GUILayout.FlexibleSpace();
+                            GUI.backgroundColor = customRed;
+                            if (GUILayout.Button("X", DeleteEntryButton(), GUILayout.MaxWidth(20), GUILayout.MaxHeight(20)))
+                            {
+                                ShowDialogEntry(i);
+                            }
+                            GUI.backgroundColor = original;
+
+                            EditorGUILayout.EndHorizontal();
+
+                            if (entriesOpenedCompleted[i])
+                            {
+                                EditorGUILayout.BeginVertical();
+                                EditorGUILayout.LabelField("TODO Title:", CenteredLabel_TODOTitle());
+                                EditorGUILayout.LabelField(Viewer.CompletedEntries[i].EntryName, EntryName_Viewer());
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                EditorGUILayout.BeginVertical();
+                                EditorGUILayout.LabelField("TODO Description:", CenteredLabel_TODOTitle());
+
+                                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                                scrollPos = EditorGUILayout.BeginScrollView(scrollPos, GUILayout.Width(EditorGUIUtility.currentViewWidth - 70), GUILayout.Height(100));
+                                GUILayout.Label(Viewer.CompletedEntries[i].EntryDesc, EntryDesc_Viewer(), GUILayout.ExpandHeight(true));
+                                EditorGUILayout.EndScrollView();
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.EndVertical();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                EditorGUILayout.BeginHorizontal();
+                                Rect leftRect = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
+                                EditorGUILayout.LabelField("Created date:", LeftLabel_CreatedDateLabel());
+                                EditorGUILayout.LabelField(Viewer.CompletedEntries[i].createdTime, LeftLabel_CreatedDateLabel());
+                                EditorGUILayout.EndHorizontal();
+                                EditorGUILayout.Separator();
+                                EditorGUILayout.Space();
+
+                                if (Viewer.CompletedEntries[i].isCompleted)
+                                {
+
+                                    EditorGUILayout.BeginHorizontal();
+                                    Rect leftRect2 = new Rect(0, 0, EditorGUIUtility.fieldWidth, 30);
+                                    EditorGUILayout.LabelField("Completed date:", LeftLabel_CreatedDateLabel());
+                                    EditorGUILayout.LabelField(Viewer.CompletedEntries[i].createdTime, LeftLabel_CreatedDateLabel());
+                                    EditorGUILayout.EndHorizontal();
+                                    EditorGUILayout.Separator();
+                                    EditorGUILayout.Space();
+                                }
+
+                                EditorGUILayout.BeginHorizontal();
+                                EditorGUILayout.EndHorizontal();
+
+
+                            }
+                            EditorGUILayout.EndVertical();
+                            EditorGUILayout.Space();
+                        }
+                    }
+                    else
+                    {
+                        EditorGUILayout.BeginVertical();
+                        EditorGUILayout.LabelField("No TODOs yet :( \n\n Click on 'Add New TODO' button. ", NoTODOSLabel());
+                        EditorGUILayout.EndVertical();
+                    }
+                    EditorGUILayout.Separator();
+                }
+                break;
+                #endregion
         }
+
         EditorGUILayout.EndToggleGroup();
         EditorGUILayout.EndVertical();
         EditorGUILayout.Separator();
@@ -171,7 +344,7 @@ public class GTD_ViewerEditor : Editor
                 GUILayout.FlexibleSpace();
                 EditorGUILayout.BeginVertical();
                 EditorGUILayout.PrefixLabel("New TODO description:", EditorStyles.boldLabel);
-                entryDesc = EditorGUILayout.TextArea(entryDesc, GUILayout.MaxWidth(600), GUILayout.Height(100));
+                entryDesc = EditorGUILayout.TextArea(entryDesc, GUILayout.MaxWidth(EditorGUIUtility.currentViewWidth), GUILayout.Height(100));
                 EditorGUILayout.EndVertical();
             }
             EditorGUILayout.EndToggleGroup();
@@ -220,6 +393,7 @@ public class GTD_ViewerEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
+
     void AddTODOEntry(string _entryName, string _entryDesc)
     {
         GTD_TodoEntry newEntry = new GTD_TodoEntry();
@@ -242,7 +416,10 @@ public class GTD_ViewerEditor : Editor
         bool option = EditorUtility.DisplayDialog("Are you sure?", "This will delete this TODO Entry.", "Ok", "Cancel");
         if (option)
         {
+            Viewer.NotCompletedEntries.Remove(Viewer.GetNotCompletedEntryByIndex(_itemIndex));
+            Viewer.CompletedEntries.Remove(Viewer.GetCompletedEntryByIndex(_itemIndex));
             Viewer.Entries.RemoveAt(_itemIndex);
+
             GUIUtility.ExitGUI();           
         }
         else
@@ -366,6 +543,16 @@ public class GTD_ViewerEditor : Editor
         result.hover.textColor = Color.white;
         result.alignment = TextAnchor.MiddleCenter;
         result.normal.textColor = Color.white;
+        return result;
+    }
+
+    GUIStyle ViewModeLabel()
+    {
+        GUIStyle result = new GUIStyle();
+        result.fontSize = 12;
+        result.hover.textColor = Color.black;
+        result.alignment = TextAnchor.MiddleCenter;
+        result.normal.textColor = Color.black;
         return result;
     }
 
